@@ -139,8 +139,11 @@ class Main {
 
       let textBoxString = '';
       for (let i = 0; i < this.chatContent.length; i++) {
+          const content = this.chatContent[i].user === 'BOT' ? 
+              this.applyOutputRegex(this.chatContent[i].text) : 
+              this.chatContent[i].text;
           textBoxString +=
-            this.chatContent[i].user + ': ' + this.applyOutputRegex(this.chatContent[i].text) + '\n\n';
+            this.chatContent[i].user + ': ' + content + '\n\n';
       }
 
       this.chatTextBox.innerText = textBoxString;
