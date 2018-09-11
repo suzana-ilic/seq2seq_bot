@@ -16,6 +16,7 @@ class Main {
    */
   constructor() {
     // Initiate variables
+    this.chatTextBoxDiv = document.getElementById('chatbox-div');
     this.chatTextBox = document.getElementById('generated-chat');
     this.inputText = document.getElementById('input-text');
     this.inputText.onkeyup = (evt) => {
@@ -24,10 +25,6 @@ class Main {
             this.sendChat();
         } 
     }
-    this.chatButton = document.getElementById('chat-button');
-    this.chatButton.onclick = () => {
-      this.sendChat();
-    };
     this.chatContent = [];
 
     Promise.all([
@@ -45,15 +42,13 @@ class Main {
    * Sets up UI elements for generating text.
    */
   enableGeneration() {
-    this.chatButton.innerText = 'Send';
-    this.chatButton.disabled = false;
+    this.inputText.placeholder = "Sarcastobot is live. Start typing..";
   }
 
   async sendChat() {
-    this.chatButton.disabled = true;
     let inputText = this.inputText.value;
     this.inputText.value = '';
-    this.updateChatbox('USER', inputText);
+    this.updateChatbox('YOU', inputText);
 
     const states = tf.tidy(() => {
         const input = this.convertSentenceToTensor(inputText);
@@ -96,7 +91,6 @@ class Main {
 
     states[0].dispose();
     states[1].dispose();
-    this.chatButton.disabled = false;
   }
 
   generateDecoderInputFromTokenID(tokenID) {
@@ -148,6 +142,12 @@ class Main {
 
       this.chatTextBox.innerText = textBoxString;
       console.log(this.chatContent);
+
+      // needed only for style
+      this.chatTextBoxDiv.hidden = false;
+      this.chatTextBox.rows = this.chatContent.length*2+1 > 10 ? 
+          10 : this.chatContent.length*2+1;
+      this.chatTextBox.scrollTop = this.chatTextBox.scrollHeight;
   }
 
   applyOutputRegex(text) {

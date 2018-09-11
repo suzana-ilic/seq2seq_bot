@@ -5,11 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Seq2Seq Chatbot with TensorFlow.js</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
     <script src="dist/bundle.js"></script>
 </head>
+<style>
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+#root {
+  flex: 1 0 auto;
+}
+</style>
 <body>
-    <p id="generated-chat"></p>
-    <input type="text" id="input-text" maxlength="40" placeholder="Type a message..">
-    <button id="chat-button" disabled>Loading Seq2Seq model...</button>
+    <div id="root">
+        <section class="hero is-dark">
+            <div class="hero-body">
+                <div class="container">
+                    <h1 class="title">
+                        <strong>Meet Sarcastobot</strong>
+                    </h1>
+                    <p class="subtitle">
+                        A mean, grumpy sarcastic chatbot.
+                    </p>
+                    <p>
+                        Say Hi.
+                    </p>
+                </div>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div hidden class="control" id="chatbox-div" style="padding-bottom: 10px">
+                    <textarea class="textarea" rows="10" type="text" readonly id="generated-chat"></textarea>
+                </div>
+                <input type="text" id="input-text" class="input" placeholder="Loading Seq2Seq model. This may take a while..">
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>
+            <strong>Sarcastobot</strong> runs a Seq2Seq model in the browser. The code is <a href="https://github.com/Machine-Learning-Tokyo/seq2seq_bot">open source</a>.
+            </p>
+        </div>
+    </footer>
 </body>
 </html>
