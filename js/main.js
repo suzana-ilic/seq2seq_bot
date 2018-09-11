@@ -140,11 +140,25 @@ class Main {
       let textBoxString = '';
       for (let i = 0; i < this.chatContent.length; i++) {
           textBoxString +=
-            this.chatContent[i].user + ': ' + this.chatContent[i].text + '\n\n';
+            this.chatContent[i].user + ': ' + this.applyOutputRegex(this.chatContent[i].text) + '\n\n';
       }
 
       this.chatTextBox.innerText = textBoxString;
       console.log(this.chatContent);
+  }
+
+  applyOutputRegex(text) {
+      text = text.replace(/i 'm/g, "I'm");
+      text = text.replace(/he 's/g, "he's");
+      text = text.replace(/do n't/g, "don't");
+      text = text.replace(/(:+\s?)+d/g, ":D");
+      text = text.replace(/(\s?)+'/g, "'");
+      text = text.replace(/i /g, "I ")
+      text = text.replace(/(\s?)+,/g, ",");
+      text = text.replace(/\s([?.!"](?:\s|$))/g, "$1");
+      text = text.replace(/(:+\s?)+\)/g, ":)");
+      text = text.replace(/(;+\s?)+\)/g, ";)");
+      return text;
   }
 }
 
