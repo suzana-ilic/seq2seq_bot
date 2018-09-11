@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from keras.models import Model, model_from_json
+from keras.models import Model, model_from_json, load_model
 from keras.layers import Input, LSTM, Dense, Embedding
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import Adam, RMSprop
@@ -37,30 +37,8 @@ class chatbot(object):
         self.num_encoder_tokens = context['num_encoder_tokens']
         self.num_decoder_tokens = context['num_decoder_tokens']
 
-        encoder_inputs = Input(shape=(None, ), name='encoder_inputs')
-        encoder_embedding = Embedding(input_dim=self.num_encoder_tokens, output_dim=HIDDEN_UNITS,
-                                      input_length=self.max_encoder_seq_length, name='encoder_embedding')
-        encoder_lstm = LSTM(units=HIDDEN_UNITS, return_state=True, name="encoder_lstm")
-        encoder_outputs, encoder_state_h, encoder_state_c = encoder_lstm(encoder_embedding(encoder_inputs))
-        encoder_states = [encoder_state_h, encoder_state_c]
-
-        decoder_inputs = Input(shape=(None, self.num_decoder_tokens), name='decoder_inputs')
-        decoder_lstm = LSTM(units=HIDDEN_UNITS, return_sequences=True, return_state=True, name='decoder_lstm')
-        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
-        decoder_dense = Dense(self.num_decoder_tokens, activation='softmax', name='decoder_dense')
-        decoder_outputs = decoder_dense(decoder_outputs)
-        optimizer = Adam(lr=0.005)
-        self.model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
-        self.model.load_weights('model/word-weights.h5')
-        self.model.compile(optimizer=optimizer, loss='categorical_crossentropy')
-
-        self.encoder_model = Model(encoder_inputs, encoder_states)
-
-        decoder_state_inputs = [Input(shape=(HIDDEN_UNITS,)), Input(shape=(HIDDEN_UNITS,))]
-        decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_state_inputs)
-        decoder_states = [state_h, state_c]
-        decoder_outputs = decoder_dense(decoder_outputs)
-        self.decoder_model = Model([decoder_inputs] + decoder_state_inputs, [decoder_outputs] + decoder_states)
+        self.encoder_model = load_model('model/encoder-weights.h5')
+        self.decoder_model = load_model('model/decoder-weights.h5')
 
     def reply(self, input_text):
         input_seq = []
@@ -78,8 +56,9 @@ class chatbot(object):
         target_text = ''
         target_text_len = 0
         terminated = False
+        self.decoder_model.layers[-2].reset_states(states=states_value)
         while not terminated:
-            output_tokens, h, c = self.decoder_model.predict([target_seq] + states_value)
+            output_tokens = self.decoder_model.predict(target_seq)
 
             sample_token_idx = np.argmax(output_tokens[0, -1, :])
             sample_word = self.target_idx2word[sample_token_idx]
@@ -104,8 +83,6 @@ class chatbot(object):
             
             target_seq = np.zeros((1, 1, self.num_decoder_tokens))
             target_seq[0, 0, sample_token_idx] = 1
-
-            states_value = [h, c]
         
         return target_text.strip('.')
         

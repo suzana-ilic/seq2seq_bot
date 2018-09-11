@@ -15,6 +15,12 @@ import nltk
 import numpy as np
 import pandas as pd
 import re
+import json
+
+
+def store_js(filename, data):
+    with open(filename, 'w') as f:
+        f.write('export default ' + json.dumps(data, indent=2))
 
 np.random.seed(42)
 
@@ -24,10 +30,8 @@ HIDDEN_UNITS = 256
 MAX_INPUT_SEQ_LENGTH = 18
 MAX_TARGET_SEQ_LENGTH = 18
 MAX_VOCAB_SIZE = 800
-DATA_PATH = 'bot_data.tsv'
+DATA_PATH = 'data/bot_data.tsv'
 WEIGHT_FILE_PATH = 'model/word-weights.h5'
-
-
 
 input_counter = Counter()
 target_counter = Counter()
@@ -86,6 +90,12 @@ np.save('model/word-input-idx2word.npy', input_idx2word)
 np.save('model/word-target-word2idx.npy', target_word2idx)
 np.save('model/word-target-idx2word.npy', target_idx2word)
 
+# Store necessary mappings for tfjs
+store_js('js/mappings/input-word2idx.js', input_word2idx)
+store_js('js/mappings/input-idx2word.js', input_idx2word)
+store_js('js/mappings/target-word2idx.js', target_word2idx)
+store_js('js/mappings/target-idx2word.js', target_idx2word)
+
 encoder_input_data = []
 
 encoder_max_seq_length = 0
@@ -111,7 +121,7 @@ context['decoder_max_seq_length'] = decoder_max_seq_length
 
 print(context)
 np.save('model/word-context.npy', context)
-
+store_js('js/mappings/word-context.js', context)
 
 def generate_batch(input_data, output_text_data):
     num_batches = len(input_data) // BATCH_SIZE
@@ -171,4 +181,17 @@ model.fit_generator(generator=train_gen, steps_per_epoch=train_num_batches,
                     epochs=NUM_EPOCHS,
                     verbose=1, validation_data=test_gen, validation_steps=test_num_batches, callbacks=[checkpoint])
 
-model.save_weights(WEIGHT_FILE_PATH)
+encoder_model = Model(encoder_inputs, encoder_states)
+encoder_model.save('model/encoder-weights.h5')
+
+new_decoder_inputs = Input(batch_shape=(1, None, num_decoder_tokens), name='new_decoder_inputs')
+new_decoder_lstm = LSTM(units=HIDDEN_UNITS, return_state=True, return_sequences=True, name='new_decoder_lstm', stateful=True)
+new_decoder_outputs, _, _ = new_decoder_lstm(new_decoder_inputs)
+new_decoder_dense = Dense(units=num_decoder_tokens, activation='softmax', name='new_decoder_dense')
+new_decoder_outputs = new_decoder_dense(new_decoder_outputs)
+new_decoder_lstm.set_weights(decoder_lstm.get_weights())
+new_decoder_dense.set_weights(decoder_dense.get_weights())
+
+new_decoder_model = Model(new_decoder_inputs, new_decoder_outputs)
+
+new_decoder_model.save('model/decoder-weights.h5')
