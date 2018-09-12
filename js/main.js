@@ -140,7 +140,7 @@ class Main {
             this.chatContent[i].user + ': ' + content + '\n\n';
       }
 
-      this.chatTextBox.innerText = textBoxString;
+      this.chatTextBox.value = textBoxString;
       console.log(this.chatContent);
 
       // needed only for style
