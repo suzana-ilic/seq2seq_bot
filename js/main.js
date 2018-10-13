@@ -26,6 +26,13 @@ class Main {
         } 
     }
     this.chatContent = [];
+    this.temperature = 0.01
+    this.temperatureSlider = document.getElementById('slider-range')
+    this.temperatureDisplay = document.getElementById('temperature-display')
+    this.temperatureSlider.oninput = (evt) => {
+        this.temperature = evt.target.value/100.
+        this.temperatureDisplay.innerHTML = "Temperature: " + evt.target.value/100.
+    }
 
     Promise.all([
         tf.loadModel('decoder-model/model.json'),
@@ -65,7 +72,7 @@ class Main {
         const outputTokenTensor = tf.tidy(() => {
             const input = this.generateDecoderInputFromTokenID(nextTokenID);
             const prediction = this.decoder.predict(input);
-            return prediction.squeeze().argMax();
+            return this.sample(prediction.squeeze());
         });
 
         const outputToken = await outputTokenTensor.data();
@@ -97,6 +104,21 @@ class Main {
       const buffer = tf.buffer([1, 1, wordContext.num_decoder_tokens]);
       buffer.set(1, 0, 0, tokenID);
       return buffer.toTensor();
+  }
+
+  /**
+   * Randomly samples next character weighted by model prediction.
+   */
+  sample(prediction) {
+    return tf.tidy(() => {
+      prediction = prediction.log();
+      const diversity = tf.scalar(this.temperature);
+      prediction = prediction.div(diversity);
+      prediction = prediction.exp();
+      prediction = prediction.div(prediction.sum());
+      prediction = prediction.mul(tf.randomUniform(prediction.shape));
+      return prediction.argMax();
+    });
   }
 
   convertSentenceToTensor(sentence) {
