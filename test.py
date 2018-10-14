@@ -80,6 +80,10 @@ class chatbot(object):
             target_text = re.sub(r'\s([?.!"](?:\s|$))', r'\1', target_text)                        
             target_text = re.sub("(:+\s?)+\)", ":)", target_text)
             target_text = re.sub("(;+\s?)+\)", ";)", target_text)
+            target_text = re.sub("can ’ t", "can't", target_text)
+            target_text = re.sub("ca n’t", "can't", target_text)
+            target_text = re.sub("\( ", "(", target_text)
+            target_text = re.sub(" \)", ")", target_text)
             
             target_seq = np.zeros((1, 1, self.num_decoder_tokens))
             target_seq[0, 0, sample_token_idx] = 1
