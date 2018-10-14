@@ -140,10 +140,10 @@ class Main {
                 inputWordIds
             );
     } else {
-        inputWordIds = inputWordIds.slice(0, 18);
+        inputWordIds = inputWordIds.slice(0, wordContext.encoder_max_seq_length);
     }
     console.log(inputWordIds);
-    return tf.tensor2d(inputWordIds, [1, 18]);
+    return tf.tensor2d(inputWordIds, [1, wordContext.encoder_max_seq_length]);
   }
 
   convertTokensToSentence(tokens) {
