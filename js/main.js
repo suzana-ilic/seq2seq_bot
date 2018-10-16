@@ -26,12 +26,12 @@ class Main {
         } 
     }
     this.chatContent = [];
-    this.temperature = 0.01
+    this.temperature = 1
     this.temperatureSlider = document.getElementById('slider-range')
     this.temperatureDisplay = document.getElementById('temperature-display')
     this.temperatureSlider.oninput = (evt) => {
-        this.temperature = evt.target.value/100.
-        this.temperatureDisplay.innerHTML = "Temperature: " + evt.target.value/100.
+        this.temperature = Math.pow(10, -evt.target.value/100.)
+        this.temperatureDisplay.innerHTML = "Temperature: " + this.temperature;
     }
 
     Promise.all([
@@ -111,6 +111,9 @@ class Main {
    */
   sample(prediction) {
     return tf.tidy(() => {
+      if (this.temperature == 1) {
+        return prediction.argMax();
+      }
       prediction = prediction.log();
       const diversity = tf.scalar(this.temperature);
       prediction = prediction.div(diversity);
