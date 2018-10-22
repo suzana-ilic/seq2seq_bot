@@ -21,14 +21,14 @@ def store_js(filename, data):
         f.write('export default ' + json.dumps(data, indent=2))
 
 BATCH_SIZE = 32
-NUM_EPOCHS = 40
+NUM_EPOCHS = 200
 HIDDEN_UNITS = 64
 MAX_INPUT_SEQ_LENGTH = 17
 MAX_TARGET_SEQ_LENGTH = 27
 MAX_VOCAB_SIZE = 2000
-questions = 'data/Q1.csv'
-answers = 'data/Q2.csv'
-WEIGHT_FILE_PATH = 'model/word-weights.h5'
+QUESTIONS = 'data/Q1.csv'
+ANSWERS = 'data/Q2.csv'
+WEIGHT_FILE_PATH = 'model/glove-word-weights.h5'
 
 input_counter = Counter()
 target_counter = Counter()
@@ -38,14 +38,14 @@ target_texts = []
 
 # loading data
 with open('data/Q1.csv', 'r', encoding='utf8') as f:
-    questions = f.read().split('\n')
+    QUESTIONS = f.read().split('\n')
     
 with open('data/Q2.csv', 'r', encoding='utf8') as f:
-    answers = f.read().split('\n')
+    ANSWERS = f.read().split('\n')
 
 
 prev_words = []
-for line in questions:
+for line in QUESTIONS:
     next_words = [w.lower() for w in nltk.word_tokenize(line)]
     if len(next_words) > MAX_TARGET_SEQ_LENGTH:
         next_words = next_words[0:MAX_TARGET_SEQ_LENGTH]
@@ -58,7 +58,7 @@ for line in questions:
     prev_words = next_words
 
 prev_words = []
-for line in answers:
+for line in ANSWERS:
     next_words = [w.lower() for w in nltk.word_tokenize(line)]
     if len(next_words) > MAX_TARGET_SEQ_LENGTH:
         next_words = next_words[0:MAX_TARGET_SEQ_LENGTH]
@@ -91,16 +91,16 @@ target_idx2word = dict([(idx, word) for word, idx in target_word2idx.items()])
 num_encoder_tokens = len(input_idx2word)
 num_decoder_tokens = len(target_idx2word)
 
-np.save('model/word-input-word2idx.npy', input_word2idx)
-np.save('model/word-input-idx2word.npy', input_idx2word)
-np.save('model/word-target-word2idx.npy', target_word2idx)
-np.save('model/word-target-idx2word.npy', target_idx2word)
+np.save('model/glove-word-input-word2idx.npy', input_word2idx)
+np.save('model/glove-word-input-idx2word.npy', input_idx2word)
+np.save('model/glove-word-target-word2idx.npy', target_word2idx)
+np.save('model/glove-word-target-idx2word.npy', target_idx2word)
 
 # Store necessary mappings for tfjs
-store_js('js/mappings/input-word2idx.js', input_word2idx)
-store_js('js/mappings/input-idx2word.js', input_idx2word)
-store_js('js/mappings/target-word2idx.js', target_word2idx)
-store_js('js/mappings/target-idx2word.js', target_idx2word)
+store_js('js/mappings/glove-input-word2idx.js', input_word2idx)
+store_js('js/mappings/glove-input-idx2word.js', input_idx2word)
+store_js('js/mappings/glove-target-word2idx.js', target_word2idx)
+store_js('js/mappings/glove-target-idx2word.js', target_idx2word)
 
 encoder_input_data = []
 
@@ -126,8 +126,8 @@ context['encoder_max_seq_length'] = encoder_max_seq_length
 context['decoder_max_seq_length'] = decoder_max_seq_length
 
 print(context)
-np.save('model/word-context.npy', context)
-store_js('js/mappings/word-context.js', context)
+np.save('model/glove-word-context.npy', context)
+store_js('js/mappings/glove-word-context.js', context)
 
 def generate_batch(input_data, output_text_data):
     num_batches = len(input_data) // BATCH_SIZE
@@ -149,11 +149,38 @@ def generate_batch(input_data, output_text_data):
             yield [encoder_input_data_batch, decoder_input_data_batch], decoder_target_data_batch
 
 
+# embedding matrx
+embeddings_index = {}
+f = open('data/glove.6B.100d.txt')
+for line in f:
+    values = line.split()
+    word = values[0]
+    coefs = np.asarray(values[1:], dtype='float32')
+    embeddings_index[word] = coefs
+f.close()
+
+count = 0
+embedding_matrix = np.zeros((len(input_word2idx) + 1, 100))
+for word, index in input_word2idx.items():
+    embedding_vector = embeddings_index.get(word)
+    if embedding_vector is not None:
+        embedding_matrix[index] = embedding_vector
+    else:
+        count += 1
+print("Unknown: ", count) 
+
+# embedding layer
+embedding_layer = Embedding(len(input_word2idx) + 1,
+                            100,
+                            weights=[embedding_matrix],
+                            input_length=encoder_max_seq_length,
+                            trainable=False) 
+
+
 encoder_inputs = Input(shape=(None,), name='encoder_inputs')
-encoder_embedding = Embedding(input_dim=num_encoder_tokens, output_dim=HIDDEN_UNITS,
-                              input_length=encoder_max_seq_length, name='encoder_embedding')
+#encoder_embedding = embedding_layer
 encoder_lstm = LSTM(units=HIDDEN_UNITS, return_state=True, name='encoder_lstm')
-encoder_outputs, encoder_state_h, encoder_state_c = encoder_lstm(encoder_embedding(encoder_inputs))
+encoder_outputs, encoder_state_h, encoder_state_c = encoder_lstm(embedding_layer(encoder_inputs))
 encoder_states = [encoder_state_h, encoder_state_c]
 
 decoder_inputs = Input(shape=(None, num_decoder_tokens), name='decoder_inputs')
@@ -165,9 +192,9 @@ decoder_outputs = decoder_dense(decoder_outputs)
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
-#early stopping on val perplexity
-#from keras.callbacks import EarlyStopping
-#callback = EarlyStopping(monitor='val_ppx', patience=2)
+#early stopping on valid perplexity
+from keras.callbacks import EarlyStopping
+callback = EarlyStopping(monitor='val_ppx', patience=2)
 
 # perplexity
 from keras.losses import categorical_crossentropy
@@ -184,7 +211,7 @@ model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[ppx
 
 
 json = model.to_json()
-open('model/word-architecture.json', 'w').write(json)
+open('model/glove-word-architecture.json', 'w').write(json)
 
 X_train, X_test, y_train, y_test = train_test_split(encoder_input_data, target_texts, test_size=0.05, random_state=42)
 
@@ -200,10 +227,10 @@ test_num_batches = len(X_test) // BATCH_SIZE
 checkpoint = ModelCheckpoint(filepath=WEIGHT_FILE_PATH, save_best_only=True)
 model.fit_generator(generator=train_gen, steps_per_epoch=train_num_batches,
                     epochs=NUM_EPOCHS,
-                    verbose=1, validation_data=test_gen, validation_steps=test_num_batches, callbacks=[checkpoint])
+                    verbose=1, validation_data=test_gen, validation_steps=test_num_batches, callbacks=[checkpoint,callback])
 
 encoder_model = Model(encoder_inputs, encoder_states)
-encoder_model.save('model/encoder-weights.h5')
+encoder_model.save('model/glove-encoder-weights.h5')
 
 new_decoder_inputs = Input(batch_shape=(1, None, num_decoder_tokens), name='new_decoder_inputs')
 new_decoder_lstm = LSTM(units=HIDDEN_UNITS, return_state=True, return_sequences=True, name='new_decoder_lstm', stateful=True)
@@ -215,5 +242,5 @@ new_decoder_dense.set_weights(decoder_dense.get_weights())
 
 new_decoder_model = Model(new_decoder_inputs, new_decoder_outputs)
 
-new_decoder_model.save('model/decoder-weights.h5')
+new_decoder_model.save('model/glove-decoder-weights.h5')
 
