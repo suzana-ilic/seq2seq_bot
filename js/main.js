@@ -186,6 +186,15 @@ class Main {
       text = text.replace(/\s([?.!"](?:\s|$))/g, "$1");
       text = text.replace(/(:+\s?)+\)/g, ":)");
       text = text.replace(/(;+\s?)+\)/g, ";)");
+      text = text.replace(/can ’ t/g, "can't");
+      text = text.replace(/"ca n’t/g, "can't");
+      text = text.replace(/ca n't/g, "can't");
+      text = text.replace(/\( /g, "(");
+      text = text.replace(/ \)/g, ")");
+      text = text.replace(/i'd/g, "I'd");
+      text = text.replace(/`` /g, "");
+      text = text.replace(/''/g, "");
+      text = text.replace(/ ``/g, "");
       return text;
   }
 }
