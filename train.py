@@ -21,11 +21,15 @@ def store_js(filename, data):
         f.write('export default ' + json.dumps(data, indent=2))
 
 BATCH_SIZE = 32
-NUM_EPOCHS = 40
+NUM_EPOCHS = 35
+HIDDEN_UNITS = 64
+MAX_INPUT_SEQ_LENGTH = 17
+MAX_TARGET_SEQ_LENGTH = 27
 HIDDEN_UNITS = 256
 MAX_INPUT_SEQ_LENGTH = 17
 MAX_TARGET_SEQ_LENGTH = 24
 MAX_VOCAB_SIZE = 2000
+
 questions = 'data/Q1.csv'
 answers = 'data/Q2.csv'
 WEIGHT_FILE_PATH = 'model/word-weights.h5'
@@ -165,8 +169,23 @@ decoder_outputs = decoder_dense(decoder_outputs)
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
+#early stopping on val perplexity
+#from keras.callbacks import EarlyStopping
+#callback = EarlyStopping(monitor='val_ppx', patience=2)
+
+# perplexity
+from keras.losses import categorical_crossentropy
+from keras import backend as K
+import math
+
+def ppx(y_true, y_pred):
+    loss = categorical_crossentropy(y_true, y_pred)
+    perplexity = K.cast(K.pow(math.e, K.mean(loss, axis=-1)), K.floatx())
+    return perplexity
+
 optimizer = Adam(lr=0.005)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[ppx])
+
 
 json = model.to_json()
 open('model/word-architecture.json', 'w').write(json)
@@ -201,3 +220,6 @@ new_decoder_dense.set_weights(decoder_dense.get_weights())
 new_decoder_model = Model(new_decoder_inputs, new_decoder_outputs)
 
 new_decoder_model.save('model/decoder-weights.h5')
+
+
+
