@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 from keras.models import Model, model_from_json, load_model
 from keras.layers import Input, LSTM, Dense, Embedding
 from keras.preprocessing.sequence import pad_sequences
@@ -10,7 +9,7 @@ import re
 import numpy as np
 import nltk
 
-HIDDEN_UNITS = 256
+HIDDEN_UNITS = 64
 
 
 class chatbot(object):
@@ -82,20 +81,32 @@ class chatbot(object):
             target_text = re.sub("(;+\s?)+\)", ";)", target_text)
             target_text = re.sub("can ’ t", "can't", target_text)
             target_text = re.sub("ca n’t", "can't", target_text)
+            target_text = re.sub("ca n't", "can't", target_text)
             target_text = re.sub("\( ", "(", target_text)
             target_text = re.sub(" \)", ")", target_text)
-            
+            target_text = re.sub("i'd", "I'd", target_text)
+            target_text = re.sub("`` ", "", target_text)
+            target_text = re.sub("''", "", target_text)
+            target_text = re.sub(" ``", "", target_text)
+            target_text = re.sub("\( ", "(", target_text)
+            target_text = re.sub(" \)", ")", target_text)            
             target_seq = np.zeros((1, 1, self.num_decoder_tokens))
             target_seq[0, 0, sample_token_idx] = 1
         
         return target_text.strip('.')
         
-    def test_run(self):
-        print(self.reply("give me a joke"))
-        print(self.reply("make me laugh"))
-        print(self.reply("are u a human"))
-        print(self.reply("you're freaking awesome"))
-        print(self.reply("you're not bad"))
+    def test_run(self):        
+        print(self.reply("where are you?"))
+        print(self.reply("who are you?"))
+        print(self.reply("that's not funny")) 
+        print(self.reply("let's do something fun!"))
+        print(self.reply("what's the meaning of life"))
+        print(self.reply("I'm hungry can you order pizza"))
+        print(self.reply("are you self-aware?"))
+        print(self.reply("what do you think about singularity"))
+        print(self.reply("why"))
+        print(self.reply("humans and robots should work together to make the world a better place. what do you think"))
+        
         
 
 
@@ -105,4 +116,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
