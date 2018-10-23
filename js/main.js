@@ -26,6 +26,13 @@ class Main {
         } 
     }
     this.chatContent = [];
+    this.temperature = 1
+    this.temperatureSlider = document.getElementById('slider-range')
+    this.temperatureDisplay = document.getElementById('temperature-display')
+    this.temperatureSlider.oninput = (evt) => {
+        this.temperature = Math.pow(10, -evt.target.value/100.)
+        this.temperatureDisplay.innerHTML = "Temperature: " + this.temperature;
+    }
 
     Promise.all([
         tf.loadModel('decoder-model/model.json'),
@@ -65,7 +72,7 @@ class Main {
         const outputTokenTensor = tf.tidy(() => {
             const input = this.generateDecoderInputFromTokenID(nextTokenID);
             const prediction = this.decoder.predict(input);
-            return prediction.squeeze().argMax();
+            return this.sample(prediction.squeeze());
         });
 
         const outputToken = await outputTokenTensor.data();
@@ -99,6 +106,24 @@ class Main {
       return buffer.toTensor();
   }
 
+  /**
+   * Randomly samples next character weighted by model prediction.
+   */
+  sample(prediction) {
+    return tf.tidy(() => {
+      if (this.temperature == 1) {
+        return prediction.argMax();
+      }
+      prediction = prediction.log();
+      const diversity = tf.scalar(this.temperature);
+      prediction = prediction.div(diversity);
+      prediction = prediction.exp();
+      prediction = prediction.div(prediction.sum());
+      prediction = prediction.mul(tf.randomUniform(prediction.shape));
+      return prediction.argMax();
+    });
+  }
+
   convertSentenceToTensor(sentence) {
     let inputWordIds = [];
     wordTokenize(sentence).map((x) => {
@@ -118,10 +143,10 @@ class Main {
                 inputWordIds
             );
     } else {
-        inputWordIds = inputWordIds.slice(0, 18);
+        inputWordIds = inputWordIds.slice(0, wordContext.encoder_max_seq_length);
     }
     console.log(inputWordIds);
-    return tf.tensor2d(inputWordIds, [1, 18]);
+    return tf.tensor2d(inputWordIds, [1, wordContext.encoder_max_seq_length]);
   }
 
   convertTokensToSentence(tokens) {
