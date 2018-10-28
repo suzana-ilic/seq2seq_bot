@@ -26,11 +26,11 @@ class Main {
         } 
     }
     this.chatContent = [];
-    this.temperature = 1
+    this.temperature = 0
     this.temperatureSlider = document.getElementById('slider-range')
     this.temperatureDisplay = document.getElementById('temperature-display')
     this.temperatureSlider.oninput = (evt) => {
-        this.temperature = Math.pow(10, -evt.target.value/100.)
+        this.temperature = evt.target.value/100.
         this.temperatureDisplay.innerHTML = "Temperature: " + this.temperature;
     }
 
@@ -107,16 +107,18 @@ class Main {
   }
 
   /**
-   * Randomly samples next character weighted by model prediction.
+   * Randomly samples next word weighted by model prediction.
    */
   sample(prediction) {
     return tf.tidy(() => {
-      if (this.temperature == 1) {
+      if (this.temperature == 0) {
         return prediction.argMax();
       }
-      prediction = prediction.log();
-      const diversity = tf.scalar(this.temperature);
-      prediction = prediction.div(diversity);
+      if (this.temperature == 1) {
+          return tf.randomUniform(prediction.shape).argMax();
+      }
+      const temperature = tf.scalar(this.temperature);
+      prediction = prediction.div(temperature);
       prediction = prediction.exp();
       prediction = prediction.div(prediction.sum());
       prediction = prediction.mul(tf.randomUniform(prediction.shape));
