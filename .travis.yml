@@ -10,6 +10,7 @@ script:
   - "cp -r dist build/dist"
   - "cp -r decoder-model build/decoder-model"
   - "cp -r encoder-model build/encoder-model"
+  - "cp -r resources build/resources"
   - "cp index.html build/index.html"
 deploy:
   provider: pages

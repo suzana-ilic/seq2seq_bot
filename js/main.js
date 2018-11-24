@@ -26,6 +26,13 @@ class Main {
         } 
     }
     this.chatContent = [];
+    this.temperature = 0
+    this.temperatureSlider = document.getElementById('slider-range')
+    this.temperatureDisplay = document.getElementById('temperature-display')
+    this.temperatureSlider.oninput = (evt) => {
+        this.temperature = evt.target.value/100.
+        this.temperatureDisplay.innerHTML = "Temperature: " + this.temperature;
+    }
 
     Promise.all([
         tf.loadModel('decoder-model/model.json'),
@@ -65,7 +72,7 @@ class Main {
         const outputTokenTensor = tf.tidy(() => {
             const input = this.generateDecoderInputFromTokenID(nextTokenID);
             const prediction = this.decoder.predict(input);
-            return prediction.squeeze().argMax();
+            return this.sample(prediction.squeeze());
         });
 
         const outputToken = await outputTokenTensor.data();
@@ -99,6 +106,26 @@ class Main {
       return buffer.toTensor();
   }
 
+  /**
+   * Randomly samples next word weighted by model prediction.
+   */
+  sample(prediction) {
+    return tf.tidy(() => {
+      if (this.temperature == 0) {
+        return prediction.argMax();
+      }
+      if (this.temperature == 1) {
+          return tf.randomUniform(prediction.shape).argMax();
+      }
+      const temperature = tf.scalar(this.temperature);
+      prediction = prediction.div(temperature);
+      prediction = prediction.exp();
+      prediction = prediction.div(prediction.sum());
+      prediction = prediction.mul(tf.randomUniform(prediction.shape));
+      return prediction.argMax();
+    });
+  }
+
   convertSentenceToTensor(sentence) {
     let inputWordIds = [];
     wordTokenize(sentence).map((x) => {
@@ -118,10 +145,10 @@ class Main {
                 inputWordIds
             );
     } else {
-        inputWordIds = inputWordIds.slice(0, 18);
+        inputWordIds = inputWordIds.slice(0, wordContext.encoder_max_seq_length);
     }
     console.log(inputWordIds);
-    return tf.tensor2d(inputWordIds, [1, 18]);
+    return tf.tensor2d(inputWordIds, [1, wordContext.encoder_max_seq_length]);
   }
 
   convertTokensToSentence(tokens) {
@@ -161,6 +188,15 @@ class Main {
       text = text.replace(/\s([?.!"](?:\s|$))/g, "$1");
       text = text.replace(/(:+\s?)+\)/g, ":)");
       text = text.replace(/(;+\s?)+\)/g, ";)");
+      text = text.replace(/can ’ t/g, "can't");
+      text = text.replace(/"ca n’t/g, "can't");
+      text = text.replace(/ca n't/g, "can't");
+      text = text.replace(/\( /g, "(");
+      text = text.replace(/ \)/g, ")");
+      text = text.replace(/i'd/g, "I'd");
+      text = text.replace(/`` /g, "");
+      text = text.replace(/''/g, "");
+      text = text.replace(/ ``/g, "");
       return text;
   }
 }

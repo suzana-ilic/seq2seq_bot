@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
-
 from keras.models import Model
-from keras.layers.recurrent import LSTM
-from keras.layers import Dense, Input, Embedding
+from keras.layers import LSTM, Dense, Input, Embedding
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
@@ -17,47 +14,57 @@ import pandas as pd
 import re
 import json
 
+np.random.seed(42)
 
 def store_js(filename, data):
     with open(filename, 'w') as f:
         f.write('export default ' + json.dumps(data, indent=2))
 
-np.random.seed(42)
-
-BATCH_SIZE = 64
-NUM_EPOCHS = 50
+BATCH_SIZE = 32
+NUM_EPOCHS = 35
 HIDDEN_UNITS = 256
-MAX_INPUT_SEQ_LENGTH = 18
-MAX_TARGET_SEQ_LENGTH = 18
-MAX_VOCAB_SIZE = 800
-DATA_PATH = 'data/bot_data.tsv'
+MAX_INPUT_SEQ_LENGTH = 17
+MAX_TARGET_SEQ_LENGTH = 24
+MAX_VOCAB_SIZE = 2000
+
+questions = 'data/Q1.csv'
+answers = 'data/Q2.csv'
 WEIGHT_FILE_PATH = 'model/word-weights.h5'
 
 input_counter = Counter()
 target_counter = Counter()
+
 input_texts = []
 target_texts = []
 
 # loading data
+with open('data/Q1.csv', 'r', encoding='utf8') as f:
+    questions = f.read().split('\n')
+    
+with open('data/Q2.csv', 'r', encoding='utf8') as f:
+    answers = f.read().split('\n')
 
-with open(DATA_PATH, 'r', encoding='utf8') as f:
-    lines = f.read().split('\n')
-
-# pre-processing
 
 prev_words = []
-for line in lines:
+for line in questions:
     next_words = [w.lower() for w in nltk.word_tokenize(line)]
     if len(next_words) > MAX_TARGET_SEQ_LENGTH:
         next_words = next_words[0:MAX_TARGET_SEQ_LENGTH]
-
-    
 
     if len(prev_words) > 0:
         input_texts.append(prev_words)
         for w in prev_words:
             input_counter[w] += 1
 
+    prev_words = next_words
+
+prev_words = []
+for line in answers:
+    next_words = [w.lower() for w in nltk.word_tokenize(line)]
+    if len(next_words) > MAX_TARGET_SEQ_LENGTH:
+        next_words = next_words[0:MAX_TARGET_SEQ_LENGTH]
+
+    if len(prev_words) > 0:
         target_words = next_words[:]
         target_words.insert(0, '<SOS>')
         target_words.append('<EOS>')
@@ -66,14 +73,14 @@ for line in lines:
         target_texts.append(target_words)
 
     prev_words = next_words
-
     
-input_word2idx = dict()
-target_word2idx = dict()
+input_word2idx = {}
+target_word2idx = {}
 for idx, word in enumerate(input_counter.most_common(MAX_VOCAB_SIZE)):
     input_word2idx[word[0]] = idx + 2
 for idx, word in enumerate(target_counter.most_common(MAX_VOCAB_SIZE)):
     target_word2idx[word[0]] = idx + 1
+    
 
 input_word2idx['<PAD>'] = 0
 input_word2idx['<UNK>'] = 1
@@ -159,22 +166,37 @@ decoder_outputs = decoder_dense(decoder_outputs)
 
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
+#early stopping on val perplexity
+#from keras.callbacks import EarlyStopping
+#callback = EarlyStopping(monitor='val_ppx', patience=2)
+
+# perplexity
+from keras.losses import categorical_crossentropy
+from keras import backend as K
+import math
+
+def ppx(y_true, y_pred):
+    loss = categorical_crossentropy(y_true, y_pred)
+    perplexity = K.cast(K.pow(math.e, K.mean(loss, axis=-1)), K.floatx())
+    return perplexity
+
 optimizer = Adam(lr=0.005)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[ppx])
+
 
 json = model.to_json()
 open('model/word-architecture.json', 'w').write(json)
 
-Xtrain, Xtest, Ytrain, Ytest = train_test_split(encoder_input_data, target_texts, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(encoder_input_data, target_texts, test_size=0.05, random_state=42)
 
-print(len(Xtrain))
-print(len(Xtest))
+print(len(X_train))
+print(len(X_test))
 
-train_gen = generate_batch(Xtrain, Ytrain)
-test_gen = generate_batch(Xtest, Ytest)
+train_gen = generate_batch(X_train, y_train)
+test_gen = generate_batch(X_test, y_test)
 
-train_num_batches = len(Xtrain) // BATCH_SIZE
-test_num_batches = len(Xtest) // BATCH_SIZE
+train_num_batches = len(X_train) // BATCH_SIZE
+test_num_batches = len(X_test) // BATCH_SIZE
 
 checkpoint = ModelCheckpoint(filepath=WEIGHT_FILE_PATH, save_best_only=True)
 model.fit_generator(generator=train_gen, steps_per_epoch=train_num_batches,
@@ -195,3 +217,6 @@ new_decoder_dense.set_weights(decoder_dense.get_weights())
 new_decoder_model = Model(new_decoder_inputs, new_decoder_outputs)
 
 new_decoder_model.save('model/decoder-weights.h5')
+
+
+
