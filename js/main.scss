@@ -35,9 +35,9 @@ body {
   }
 
   &__github-link {
-    position: fixed;
-    top: 27px;
+    position: absolute;
     right: 20px;
+    top: 27px;
 
     img {
       width: 50px;
@@ -80,12 +80,6 @@ footer {
   position: relative;
   width: 90%;
 
-  &__heading {
-    margin: 0;
-    font-weight: normal;
-    font-size: 1.2rem;
-  }
-
   &__input {
     bottom: 0;
     left: 0;
@@ -97,6 +91,24 @@ footer {
 .conversation {
   overflow-y: scroll;
   height: calc(100% - 150px);
+
+  &__heading {
+    font-size: 1.2rem;
+    font-weight: normal;
+    margin: 0;
+
+    &__text--ready {
+      display: none;
+    }
+  }
+
+  &.ready &__heading__text--ready {
+    display: inline;
+  }
+
+  &.ready  &__heading__text--loading {
+    display: none;
+  }
 
   &__row {
     margin: 15px 0;
@@ -173,6 +185,10 @@ footer {
     font-size: 1.2rem;
     padding: 10px;
     width: 100%;
+
+    &:disabled {
+      background: #eee;
+    }
   }
 
   &__temp {

@@ -53,7 +53,7 @@ class Main {
   enableGeneration() {
     this.inputText.placeholder = "Sarcastobot is live. Start typing..";
     this.inputText.disabled = "";
-    this.modelLoadAnimEle.classList.add('hidden');
+    this.conversationEle.classList.add('ready');
   }
 
   async sendChat() {

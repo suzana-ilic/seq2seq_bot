@@ -19,12 +19,14 @@
   <main>
     <section class="chat">
       <div class="conversation" id="conversation">
-        <h2 class="chat__heading">Say Hi.</h2>
+        <h2 class="conversation__heading">
+          <span class="conversation__heading__text--loading">Loading Seq2Seq model. This may take a while..</span>
+          <span class="conversation__heading__text--ready">Say Hi.</span>
+        </h2>
       </div>
       <div class="chat__input">
         <div class="input-window">
-          <input type="text" class="input-window__text" id="input-text" disabled placeholder="Loading Seq2Seq model. This may take a while..">
-          <img alt="loading the model" src="resources/loader.gif" class="input-window__loader" id="model-load-anim">
+          <input type="text" class="input-window__text" id="input-text" disabled placeholder="Loading...">
           <div class="input-window__temp">
             <label for="temperature">Temperature: <span class="input-window__temp__val" id="temperature-display"></span></label>
             <input type="range" class="input-window__range" name="temperature" id="slider-range" min="0" max="1" step="0.01">
