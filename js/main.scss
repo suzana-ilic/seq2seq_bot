@@ -46,11 +46,8 @@ body {
 }
 
 main {
-  height: calc(100vh - #{$header-height} - #{$footer-height} - 30px);
-  @media (min-width: $dp-tablet) {
-    height: calc(100vh - #{$header-height} - #{$footer-height});
-  }
   box-sizing: border-box;
+  height: calc(100vh - #{$header-height} - #{$footer-height});
   padding: 20px 0;
 }
 
@@ -117,7 +114,7 @@ footer {
         width: 50px;
         height: 50px;
         background: rgba(70, 10, 172, 0.4);
-        background-image: url('/resources/catbot.png');
+        background-image: url('../resources/catbot.png');
         background-size: 50px;
         background-position: center;
         background-repeat: no-repeat;
