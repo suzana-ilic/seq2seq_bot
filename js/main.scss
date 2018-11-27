@@ -1,0 +1,202 @@
+$header-height: 100px;
+$footer-height: 60px;
+$dp-mobile: 480px;
+$dp-tablet: 960px;
+
+html {
+  font-size: 14px;
+
+  @media (min-width: $dp-mobile) {
+    font-size: 16px;
+  }
+}
+
+body {
+  background: #eee;
+  font-family: Lato, Helvetica, sans-serif;
+  margin: 0;
+}
+
+.header {
+  background: #460aac;
+  box-sizing: border-box;
+  color: #fff;
+  height: $header-height;
+  padding: 20px;
+
+  h1 {
+    font-size: 2rem;
+    margin: 0;
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+  }
+
+  &__github-link {
+    position: fixed;
+    top: 27px;
+    right: 20px;
+
+    img {
+      width: 50px;
+    }
+  }
+}
+
+main {
+  height: calc(100vh - #{$header-height} - #{$footer-height} - 30px);
+  @media (min-width: $dp-tablet) {
+    height: calc(100vh - #{$header-height} - #{$footer-height});
+  }
+  box-sizing: border-box;
+  padding: 20px 0;
+}
+
+footer {
+  box-sizing: border-box;
+  color: #333;
+  font-size: 0.8rem;
+  margin: 0 auto;
+  max-width: 600px;
+  width: 90%;
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: #7ed321;
+  }
+}
+
+.chat {
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0 auto;
+  max-width: 600px;
+  padding: 15px;
+  position: relative;
+  width: 90%;
+
+  &__heading {
+    margin: 0;
+    font-weight: normal;
+    font-size: 1.2rem;
+  }
+
+  &__input {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    width: 100%;
+  }
+}
+
+.conversation {
+  overflow-y: scroll;
+  height: calc(100% - 150px);
+
+  &__row {
+    margin: 15px 0;
+    position: relative;
+
+    &--you {
+      text-align: right;
+    }
+
+    &--bot {
+      &:before {
+        vertical-align: top;
+        content: " ";
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        background: rgba(70, 10, 172, 0.4);
+        background-image: url('/resources/catbot.png');
+        background-size: 50px;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 50%;
+        margin-right: 15px;
+      }
+    }
+  }
+
+  &__bubble {
+    background: #eee;
+    border-radius: 5px;
+    display: inline-block;
+    padding: 10px;
+    position: relative;
+    text-align: left;
+    max-width: 480px;
+  }
+
+  &__row--you &__bubble {
+    background: #7ed321;
+    color: #fff;
+  }
+
+  &__row--bot &__bubble:after {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: -16px;
+    right: auto;
+    top: 0px;
+    bottom: auto;
+    border: 16px solid;
+    border-color: #eee transparent transparent transparent;
+  }
+}
+
+.input-window {
+  padding: 15px;
+  position: relative;
+
+  &__loader {
+    display: inline-block;
+    height: 36px;
+    position: absolute;
+    right: 19px;
+    top: 19px;
+    width: 36px;
+  }
+
+  &__text {
+    border-radius: 2px;
+    border: solid 1px #ccc;
+    box-sizing: border-box;
+    font-size: 1.2rem;
+    padding: 10px;
+    width: 100%;
+  }
+
+  &__temp {
+    box-sizing: border-box;
+    height: 60px;
+    padding: 10px 0;
+  }
+
+  &__range {
+    width: 100%;
+  }
+
+  &__temp__val {
+    background: #555;
+    border-radius: 2px;
+    color: #fff;
+    display: inline-block;
+    padding: 5px 10px;
+  }
+}
+
+.hidden {
+  visibility: hidden;
+}

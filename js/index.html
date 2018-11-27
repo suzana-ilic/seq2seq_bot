@@ -4,113 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Seq2Seq Chatbot with TensorFlow.js</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
-    <script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+    <title>Sarcastobot — Seq2Seq Chatbot with TensorFlow.js</title>
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="dist/main.css">
     <script src="dist/bundle.js"></script>
 </head>
-<style>
-body {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-}
-
-#root {
-  flex: 1 0 auto;
-}
-
-.slidecontainer {
-    width: 100%; /* Width of the outside container */
-}
-
-/* The slider itself */
-.slider {
-    -webkit-appearance: none;  /* Override default CSS styles */
-    appearance: none;
-    width: 100%; /* Full-width */
-    height: 20px; /* Specified height */
-    background: #d3d3d3; /* Grey background */
-    outline: none; /* Remove outline */
-    opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-    -webkit-transition: .2s; /* 0.2 seconds transition on hover */
-    transition: opacity .2s;
-}
-
-/* Mouse-over effects */
-.slider:hover {
-    opacity: 1; /* Fully shown on mouse-over */
-}
-
-/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */ 
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none; /* Override default look */
-    appearance: none;
-    width: 20px; /* Set a specific slider handle width */
-    height: 20px; /* Slider handle height */
-    background: rgb(77, 85, 77); /* Green background */
-    cursor: pointer; /* Cursor on hover */
-}
-
-.slider::-moz-range-thumb {
-    width: 20px; /* Set a specific slider handle width */
-    height: 20px; /* Slider handle height */
-    background: #4CAF50; /* Green background */
-    cursor: pointer; /* Cursor on hover */
-}
-
-#generated-chat, #input-text {
-    opacity: 0.92;
-}
-
-body { 
-    background-image: url('resources/bg_haha.jpg');
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-position: right; 
-}
-</style>
 <body>
-    <div id="root">
-        <section class="hero is-dark">
-            <div class="hero-body">
-                <div class="container">
-                    <h1 class="title">
-                        <strong>Meet Sarcastobot</strong>
-                    </h1>
-                    <p class="subtitle">
-                        A mean, grumpy sarcastic chatbot.
-                    </p>
-                    <p>
-                        Say Hi.
-                    </p>
-                </div>
-            </div>
-        </section>
-        <section class="section">
-            <div class="container">
-                <div hidden class="control" id="chatbox-div" style="padding-bottom: 10px">
-                    <textarea class="textarea" rows="10" type="text" readonly id="generated-chat"></textarea>
-                </div>
-                <input type="text" id="input-text" class="input" placeholder="Loading Seq2Seq model. This may take a while..">
-
-                <div class="slidecontainer" style="padding-top: 20px">
-                    <input type="range" min="0" max="100" value="0" class="slider" id="slider-range">
-                </div>
-                <div id="temperature-display">
-                    Temperature: 0
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-            <strong>Sarcastobot</strong> runs a Seq2Seq model in the browser. The code is <a href="https://github.com/Machine-Learning-Tokyo/seq2seq_bot">open source</a>.
-            </p>
-            <p><small><font color="gray">This project was built with <a href="js.tensorflow.org">TensorFlow.js</a>, a JavaScript library for training and deploying ML models in the browser and on Node.js.</font></small></p>
+  <header class="header">
+    <h1>Sarcastobot</h1>
+    <p>A mean, grumpy sarcastic chatbot.</p>
+    <a href="https://github.com/Machine-Learning-Tokyo/seq2seq_bot" target="_blank" title="GitHub repository" class="header__github-link">
+      <img src="/resources/github.png" alt="GitHub"></a>
+  </header>
+  <main>
+    <section class="chat">
+      <div class="conversation" id="conversation">
+        <h2 class="chat__heading">Say Hi.</h2>
+      </div>
+      <div class="chat__input">
+        <div class="input-window">
+          <input type="text" class="input-window__text" id="input-text" disabled placeholder="Loading Seq2Seq model. This may take a while..">
+          <img alt="loading the model" src="/resources/loader.gif" class="input-window__loader" id="model-load-anim">
+          <div class="input-window__temp">
+            <label for="temperature">Temperature: <span class="input-window__temp__val" id="temperature-display"></span></label>
+            <input type="range" class="input-window__range" name="temperature" id="slider-range" min="0" max="1" step="0.01">
+          </div>
         </div>
-    </footer>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>Sarcastobot runs a Seq2Seq model in the browser using <a href="https://js.tensorflow.org/" target="_blank">TensorFlow.js</a>.
+    The code is <a href="https://github.com/Machine-Learning-Tokyo/seq2seq_bot" target="_blank">open source</a>.</p>
+  </footer>
 </body>
 </html>

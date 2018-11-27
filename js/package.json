@@ -10,8 +10,10 @@
     "start": "budo main.js:dist/bundle.js --live --host localhost",
     "watch": "watchify main.js -v --debug -o dist/bundle.js",
     "prep": "yarn && mkdirp dist",
-    "build": "browserify main.js -o dist/bundle.js",
+    "build": "npm run build-css && browserify main.js -o dist/bundle.js",
     "lint": "eslint main.js --fix",
+    "build-css": "node-sass main.scss -o dist --output-style compressed --include-path node_modules",
+    "watch-css": "node-sass main.scss -o dist --output-style compressed --include-path node_modules -w",
     "deploy": "yarn build && uglifyjs dist/bundle.js -c -m -o dist/bundle.min.js"
   },
   "browserify": {
@@ -39,6 +41,7 @@
     "eslint": "~4.11.0",
     "eslint-config-google": "~0.9.1",
     "mkdirp": "~0.5.1",
+    "node-sass": "^4.9.3",
     "uglify-js": "^3.3.17"
   }
 }

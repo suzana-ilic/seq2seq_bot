@@ -16,9 +16,9 @@ class Main {
    */
   constructor() {
     // Initiate variables
-    this.chatTextBoxDiv = document.getElementById('chatbox-div');
-    this.chatTextBox = document.getElementById('generated-chat');
+    this.conversationEle = document.getElementById('conversation');
     this.inputText = document.getElementById('input-text');
+    this.modelLoadAnimEle = document.getElementById('model-load-anim');
     this.inputText.onkeyup = (evt) => {
         evt.preventDefault();
         if (evt.keyCode === 13) {
@@ -26,13 +26,15 @@ class Main {
         } 
     }
     this.chatContent = [];
-    this.temperature = 0
-    this.temperatureSlider = document.getElementById('slider-range')
-    this.temperatureDisplay = document.getElementById('temperature-display')
+    this.temperature = 0;
+    this.temperatureSlider = document.getElementById('slider-range');
+    this.temperatureDisplay = document.getElementById('temperature-display');
     this.temperatureSlider.oninput = (evt) => {
-        this.temperature = evt.target.value/100.
-        this.temperatureDisplay.innerHTML = "Temperature: " + this.temperature;
+        this.temperature = parseFloat(evt.target.value);
+        this.temperatureDisplay.textContent = this.temperature;
     }
+    this.temperatureDisplay.textContent = this.temperature;
+    this.temperatureSlider.value = this.temperature;
 
     Promise.all([
         tf.loadModel('decoder-model/model.json'),
@@ -50,6 +52,8 @@ class Main {
    */
   enableGeneration() {
     this.inputText.placeholder = "Sarcastobot is live. Start typing..";
+    this.inputText.disabled = "";
+    this.modelLoadAnimEle.classList.add('hidden');
   }
 
   async sendChat() {
@@ -156,25 +160,16 @@ class Main {
   }
 
   updateChatbox(user, text) {
-      this.chatContent.push({user, text});
-
-      let textBoxString = '';
-      for (let i = 0; i < this.chatContent.length; i++) {
-          const content = this.chatContent[i].user === 'BOT' ? 
-              this.applyOutputRegex(this.chatContent[i].text) : 
-              this.chatContent[i].text;
-          textBoxString +=
-            this.chatContent[i].user + ': ' + content + '\n\n';
-      }
-
-      this.chatTextBox.value = textBoxString;
-      console.log(this.chatContent);
-
-      // needed only for style
-      this.chatTextBoxDiv.hidden = false;
-      this.chatTextBox.rows = this.chatContent.length*2+1 > 10 ? 
-          10 : this.chatContent.length*2+1;
-      this.chatTextBox.scrollTop = this.chatTextBox.scrollHeight;
+    const row = document.createElement('div');
+    row.classList.add('conversation__row');
+    row.classList.add(
+      user == 'BOT' ? 'conversation__row--bot' : 'conversation__row--you');
+    const bubble = document.createElement('div');
+    bubble.className = 'conversation__bubble';
+    bubble.textContent = user == 'BOT' ? this.applyOutputRegex(text) : text;
+    row.appendChild(bubble);
+    this.conversationEle.appendChild(row);
+    this.conversationEle.scrollTop = this.conversationEle.scrollHeight;
   }
 
   applyOutputRegex(text) {
