@@ -81,10 +81,10 @@ class Main {
 
         const outputToken = await outputTokenTensor.data();
         outputTokenTensor.dispose();
-        const word = targetIdx2word[outputToken[0]];
+        nextTokenID = Math.round(outputToken[0]);
+        const word = targetIdx2word[nextTokenID];
         numPredicted++;
-        nextTokenID = outputToken[0];
-        console.log(outputToken, word);
+        console.log(outputToken, nextTokenID, word);
 
         if (word !== '<EOS>' && word !== '<SOS>') {
             responseTokens.push(word);
