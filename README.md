@@ -1,1 +1,1 @@
-# Designing conversational systems: A mean, grumpy, sarcastic chatbot
+# Designing dialogue systems: A mean, grumpy, sarcastic chatbot
