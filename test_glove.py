@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 from keras.models import Model, model_from_json, load_model
 from keras.layers import Input, LSTM, Dense, Embedding
 from keras.preprocessing.sequence import pad_sequences
@@ -26,18 +27,18 @@ class chatbot(object):
     num_decoder_tokens = None
 
     def __init__(self):
-        self.input_word2idx = np.load('model/word-input-word2idx.npy').item()
-        self.input_idx2word = np.load('model/word-input-idx2word.npy').item()
-        self.target_word2idx = np.load('model/word-target-word2idx.npy').item()
-        self.target_idx2word = np.load('model/word-target-idx2word.npy').item()
-        context = np.load('model/word-context.npy').item()
+        self.input_word2idx = np.load('model/glove-word-input-word2idx.npy').item()
+        self.input_idx2word = np.load('model/glove-word-input-idx2word.npy').item()
+        self.target_word2idx = np.load('model/glove-word-target-word2idx.npy').item()
+        self.target_idx2word = np.load('model/glove-word-target-idx2word.npy').item()
+        context = np.load('model/glove-word-context.npy').item()
         self.max_encoder_seq_length = context['encoder_max_seq_length']
         self.max_decoder_seq_length = context['decoder_max_seq_length']
         self.num_encoder_tokens = context['num_encoder_tokens']
         self.num_decoder_tokens = context['num_decoder_tokens']
 
-        self.encoder_model = load_model('model/encoder-weights.h5')
-        self.decoder_model = load_model('model/decoder-weights.h5')
+        self.encoder_model = load_model('model/glove-encoder-weights.h5')
+        self.decoder_model = load_model('model/glove-decoder-weights.h5')
 
     def reply(self, input_text):
         input_seq = []
@@ -94,18 +95,19 @@ class chatbot(object):
         
         return target_text.strip('.')
         
-    def test_run(self):        
+    def test_run(self):
         print(self.reply("where are you"))
         print(self.reply("who are you?"))
-        print(self.reply("that's not funny")) 
-        print(self.reply("tell me a joke"))
+        print(self.reply("who is the president")) 
+        print(self.reply("tell me something"))
         print(self.reply("what's the purpose of life"))
-        print(self.reply("I'm hungry can you order pizza"))
+        print(self.reply("I'm starving. can you order pizza?"))
         print(self.reply("are you self-aware?"))
-        print(self.reply("chatbots are not self-aware"))
-        print(self.reply("why"))
-        print(self.reply("humans and robots should work together to make the world a better place. what do you think?"))
-        
+        print(self.reply("you failed, sorry!"))
+        print(self.reply("this is not funny!"))
+        print(self.reply("humans and robots should work together to make the world a better place. what do you think"))
+        print(self.reply("what do you think about singularity?"))
+
         
 
 
@@ -115,3 +117,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
